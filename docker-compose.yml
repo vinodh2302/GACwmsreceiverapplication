@@ -19,3 +19,42 @@ services:
       - RABBITMQ__HOSTNAME=rabbitmq
       - RABBITMQ__USERNAME=guest
       - RABBITMQ__PASSWORD=guest
+    command: sh -c "until nc -z rabbitmq 5672; do echo Waiting for RabbitMQ; sleep 2; done && dotnet wmsreceiverapplication.dll"
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong!Passw0rd
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  migrator:
+    build:
+      context: ../ERPSystems/ERPSystems
+      dockerfile: Migrator.Dockerfile
+    depends_on:
+      - sqlserver
+    environment:
+      - SA_PASSWORD=YourStrong!Passw0rd
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=WMSSystemsDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+
+
+  wmsapi:
+    build:
+      context: ../ERPSystems/ERPSystems
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - sqlserver
+      - migrator
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=WMSSystemsDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+    command: dotnet WMSSystems.dll
+
+volumes:
+  sqlserver-data:
