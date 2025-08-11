@@ -17,7 +17,7 @@ namespace wmsreceiverapplication
         private readonly ILogger<CustomerProcessingWorker> _logger;
         private IConnection _connection;
         private IModel _channel;
-        private const string QueueName = "OrderProcessing";
+        private const string QueueName = "CustomerProcessing";
         private readonly HttpClient _httpClient;
         public CustomerProcessingWorker(ILogger<CustomerProcessingWorker> logger)
         {

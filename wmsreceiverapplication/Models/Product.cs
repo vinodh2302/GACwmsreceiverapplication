@@ -8,9 +8,9 @@ namespace WMSSystems.Models
         public string productCode { get; set; }
         public string productTitle { get; set; }
         public string productDescription { get; set; }
-        public int productLength { get; set; }
-        public int productWidth { get; set; }
-        public int productHeight { get; set; }
+        public string productLength { get; set; }
+        public string productWidth { get; set; }
+        public string productHeight { get; set; }
 
     }
 }

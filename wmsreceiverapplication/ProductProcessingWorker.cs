@@ -17,7 +17,7 @@ namespace wmsreceiverapplication
         private readonly ILogger<ProductProcessingWorker> _logger;
         private IConnection _connection;
         private IModel _channel;
-        private const string QueueName = "OrderProcessing";
+        private const string QueueName = "ProductProcessing";
         private readonly HttpClient _httpClient;
         public ProductProcessingWorker(ILogger<ProductProcessingWorker> logger)
         {
@@ -37,7 +37,7 @@ namespace wmsreceiverapplication
                 try
                 {
                     _connection = factory.CreateConnection();
-                    _logger.LogInformation("Connected to RabbitMQ for CustomerProcessing queue");
+                    _logger.LogInformation("Connected to RabbitMQ for ProductProcessing queue");
                     break;
                 }
                 catch (BrokerUnreachableException)
@@ -64,7 +64,7 @@ namespace wmsreceiverapplication
                 {
                     var message = Encoding.UTF8.GetString(result.Body.ToArray());
                     _logger.LogInformation($"Fetched: {message}");
-                    var customer = JsonSerializer.Deserialize<Customer>(message);
+                    var customer = JsonSerializer.Deserialize<Product>(message);
 
                     if (customer == null)
                     {
@@ -80,7 +80,7 @@ namespace wmsreceiverapplication
                     //var content = new StringContent(message, Encoding.UTF8, "application/json");
                     try
                     {
-                        var response = await _httpClient.PostAsync("http://wmsapi:80/api/Customer/customers", content, stoppingToken);
+                        var response = await _httpClient.PostAsync("http://wmsapi:80/api/Product/products", content, stoppingToken);
                         if (response.IsSuccessStatusCode)
                         {
                             _logger.LogInformation("Message forwarded successfully.");
