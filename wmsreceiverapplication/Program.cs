@@ -13,6 +13,7 @@ namespace wmsreceiverapplication
             // Register workers for different queues
             builder.Services.AddHostedService<ProductProcessingWorker>();
             builder.Services.AddHostedService<CustomerProcessingWorker>();
+            builder.Services.AddHostedService<OrderProcessingWorker>();
 
             var host = builder.Build();
             host.Run();
