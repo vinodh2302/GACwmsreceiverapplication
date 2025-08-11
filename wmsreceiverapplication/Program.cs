@@ -1,3 +1,7 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using wmsreceiverapplication;
+
 namespace wmsreceiverapplication
 {
     public class Program
@@ -5,7 +9,10 @@ namespace wmsreceiverapplication
         public static void Main(string[] args)
         {
             var builder = Host.CreateApplicationBuilder(args);
-            builder.Services.AddHostedService<Worker>();
+
+            // Register workers for different queues
+            builder.Services.AddHostedService<ProductProcessingWorker>();
+            builder.Services.AddHostedService<CustomerProcessingWorker>();
 
             var host = builder.Build();
             host.Run();

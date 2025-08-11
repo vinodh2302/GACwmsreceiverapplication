@@ -1,71 +1,58 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
+using System;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using WMSSystems.Models;
 
 namespace wmsreceiverapplication
 {
-    public class Worker : BackgroundService
+    public class ProductProcessingWorker : BackgroundService
     {
-        private readonly ILogger<Worker> _logger;
+        private readonly ILogger<ProductProcessingWorker> _logger;
         private IConnection _connection;
         private IModel _channel;
-
         private const string QueueName = "OrderProcessing";
         private readonly HttpClient _httpClient;
-
-
-
-        public Worker(ILogger<Worker> logger)
+        public ProductProcessingWorker(ILogger<ProductProcessingWorker> logger)
         {
             _logger = logger;
             _httpClient = new HttpClient();
-
-            //var factory = new ConnectionFactory()
-            //{
-            //    HostName = "localhost",
-            //    Port = 5672,
-            //    UserName = "guest",
-            //    Password = "guest"
-            //};
             var factory = new ConnectionFactory
             {
-                Port = 5672,
                 HostName = "rabbitmq",
-                UserName =  "guest",
+                Port = 5672,
+                UserName = "guest",
                 Password = "guest"
             };
 
-            IConnection connection = null;
             int retries = 10;
             while (retries > 0)
             {
                 try
                 {
-                    connection = factory.CreateConnection();
-                    Console.WriteLine("Connected to RabbitMQ!");
+                    _connection = factory.CreateConnection();
+                    _logger.LogInformation("Connected to RabbitMQ for CustomerProcessing queue");
                     break;
                 }
                 catch (BrokerUnreachableException)
                 {
                     retries--;
-                    Console.WriteLine("RabbitMQ not ready, retrying...");
+                    _logger.LogWarning("RabbitMQ not ready, retrying in 5 seconds...");
                     Thread.Sleep(5000);
                 }
             }
-            _logger.LogInformation("Came 12");
-            if(connection != null)
-            {
-                _channel = connection.CreateModel();
 
-                _channel.QueueDeclare(queue: QueueName,
-                                     durable: true,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
+            if (_connection != null)
+            {
+                _channel = _connection.CreateModel();
+                _channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
             }
-           
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
